@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Orbit Focus</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101020;
+      --panel: #1b1b32;
+      --text: #f1efff;
+      --muted: #aaa7c4;
+      --accent: #b2a0ff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse at top left, #43307555, transparent 55%),
+        var(--bg);
+      color: var(--text);
+      font-family: system-ui, sans-serif;
+    }
+
+    button, input { font: inherit; }
+
+    button {
+      cursor: pointer;
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 20px;
+      background: var(--accent);
+      color: #181228;
+      font-weight: 700;
+    }
+
+    button:hover { filter: brightness(1.1); }
+
+    :focus-visible {
+      outline: 3px solid #d8ceff;
+      outline-offset: 4px;
+    }
+
+    header, main, footer {
+      width: min(100% - 40px, 1000px);
+      margin: auto;
+    }
+
+    header {
+      padding: 30px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .brand { font-size: 22px; font-weight: 800; }
+    .brand span { color: var(--accent); }
+
+    .badge {
+      border: 1px solid #ffffff20;
+      padding: 8px 14px;
+      border-radius: 30px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .intro { margin: 35px 0; }
+
+    .eyebrow {
+      color: var(--accent);
+      letter-spacing: 3px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    h1 {
+      font-size: clamp(32px, 6vw, 54px);
+      letter-spacing: -2px;
+      margin: 12px 0;
+    }
+
+    .intro p:last-child { color: var(--muted); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 22px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid #ffffff12;
+      border-radius: 24px;
+      padding: 28px;
+    }
+
+    .modes {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .modes button {
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+      padding: 10px 14px;
+    }
+
+    .modes button[aria-pressed="true"] {
+      background: #b2a0ff20;
+      color: var(--accent);
+    }
+
+    .universe {
+      width: min(270px, 100%);
+      aspect-ratio: 1;
+      margin: 35px auto;
+      display: grid;
+      place-items: center;
+      position: relative;
+    }
+
+    .orbit {
+      position: absolute;
+      inset: 0;
+      border: 1px solid #b2a0ff40;
+      border-radius: 50%;
+      animation: revolve 18s linear infinite;
+      animation-play-state: paused;
+    }
+
+    .orbit::before {
+      content: "";
+      position: absolute;
+      width: 17px;
+      height: 17px;
+      top: -8px;
+      left: calc(50% - 8px);
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 24px #b2a0ff;
+    }
+
+    .running .orbit { animation-play-state: running; }
+
+    .planet {
+      width: 82%;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 25%, #514078, #222039 75%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      box-shadow: inset -15px -15px 40px #0c0c22;
+    }
+
+    #clock {
+      font-size: clamp(42px, 7vw, 60px);
+      font-weight: 750;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -3px;
+    }
+
+    #phase { color: var(--muted); font-size: 13px; }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .secondary {
+      background: #ffffff0c;
+      color: var(--text);
+    }
+
+    progress {
+      width: 100%;
+      height: 7px;
+      margin-top: 30px;
+      accent-color: var(--accent);
+    }
+
+    h2 { font-size: 20px; margin: 0 0 8px; }
+
+    .muted { color: var(--muted); font-size: 13px; }
+
+    form { display: flex; gap: 8px; margin: 25px 0; }
+
+    input {
+      width: 100%;
+      min-width: 0;
+      background: #111122;
+      border: 1px solid #ffffff20;
+      border-radius: 12px;
+      padding: 12px;
+      color: var(--text);
+    }
+
+    ul { list-style: none; padding: 0; }
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #ffffff0c;
+      padding: 15px 0;
+    }
+
+    li label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+      cursor: pointer;
+    }
+
+    li input { width: 17px; accent-color: var(--accent); }
+    li span { overflow-wrap: anywhere; }
+    li input:checked + span { text-decoration: line-through; color: var(--muted); }
+
+    .delete {
+      background: transparent;
+      color: var(--muted);
+      padding: 5px 9px;
+      font-size: 20px;
+    }
+
+    .empty { padding: 25px 0; text-align: center; }
+
+    #message {
+      min-height: 24px;
+      text-align: center;
+      color: var(--accent);
+      font-size: 13px;
+      margin-top: 20px;
+    }
+
+    footer {
+      padding: 30px 0;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @keyframes revolve { to { transform: rotate(360deg); } }
+
+    @media (max-width: 700px) {
+      .grid { grid-template-columns: 1fr; }
+      .panel { padding: 22px; }
+      header { flex-wrap: wrap; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .orbit { animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">◉ Orbit<span>Focus</span></div>
+    <div class="badge">✦ <span id="sessions">0</span> missions completed</div>
+  </header>
+
+  <main>
+    <section class="intro">
+      <p class="eyebrow">YOUR PERSONAL FOCUS STATION</p>
+      <h1>Small steps. Stellar progress.</h1>
+      <p>Choose a mission, settle into your orbit, and give one thing your attention.</p>
+    </section>
+
+    <div class="grid">
+      <section class="panel" aria-label="Focus timer">
+        <div class="modes" role="group" aria-label="Timer mode">
+          <button data-mode="focus" aria-pressed="true">Focus · 25m</button>
+          <button data-mode="break" aria-pressed="false">Rest · 5m</button>
+        </div>
+
+        <div class="universe" id="universe">
+          <div class="orbit" aria-hidden="true"></div>
+          <div class="planet">
+            <div id="clock" role="timer" aria-label="Time remaining">25:00</div>
+            <div id="phase">Ready for takeoff</div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <button id="start">Start mission</button>
+          <button id="reset" class="secondary">Reset</button>
+        </div>
+
+        <progress id="progress" value="0" max="1500"
+                  aria-label="Timer progress"></progress>
+        <p id="message" role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="panel">
+        <h2>Your mission board</h2>
+        <p id="task-count" class="muted">0 of 0 tasks completed</p>
+
+        <form id="task-form">
+          <input id="task-input" aria-label="New task"
+                 placeholder="What’s your next small step?"
+                 maxlength="120" required>
+          <button type="submit" aria-label="Add task">+</button>
+        </form>
+
+        <ul id="tasks"></ul>
+        <p id="empty" class="muted empty">Your next adventure starts with one task. ✦</p>
+        <p id="storage-note" class="muted" role="status"></p>
+      </section>
+    </div>
+  </main>
+
+  <footer>One focused moment at a time. Your task board saves in this browser.</footer>
+
+  <script>
+    const $ = selector => document.querySelector(selector);
+    const STORAGE_KEY = "orbit-focus-v1";
+
+    let saved = {};
+    try {
+      saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}") || {};
+    } catch {
+      $("#storage-note").textContent = "Saved data unavailable. You can still use this page.";
+    }
+
+    let tasks = Array.isArray(saved.tasks)
+      ? saved.tasks
+          .filter(task => task && typeof task.text === "string")
+          .map(task => ({
+            text: task.text.slice(0, 120),
+            done: task.done === true
+          }))
+      : [];
+
+    let sessions = Number.isSafeInteger(saved.sessions) && saved.sessions >= 0
+      ? saved.sessions
+      : 0;
+
+    function save() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ tasks, sessions }));
+      } catch {
+        $("#storage-note").textContent =
+          "Browser storage is unavailable. Changes will last only while this page stays open.";
+      }
+    }
+
+    function renderTasks() {
+      $("#tasks").replaceChildren();
+
+      tasks.forEach((task, index) => {
+        const item = document.createElement("li");
+        const label = document.createElement("label");
+        const checkbox = document.createElement("input");
+        const text = document.createElement("span");
+        const remove = document.createElement("button");
+
+        checkbox.type = "checkbox";
+        checkbox.checked = task.done;
+        text.textContent = task.text;
+
+        checkbox.addEventListener("change", () => {
+          task.done = checkbox.checked;
+          save();
+          updateTaskCount();
+        });
+
+        remove.type = "button";
+        remove.className = "delete";
+        remove.textContent = "×";
+        remove.setAttribute("aria-label", "Delete task: " + task.text);
+
+        remove.addEventListener("click", () => {
+          tasks.splice(index, 1);
+          save();
+          renderTasks();
+          $("#task-input").focus();
+        });
+
+        label.append(checkbox, text);
+        item.append(label, remove);
+        $("#tasks").append(item);
+      });
+
+      $("#empty").hidden = tasks.length > 0;
+      updateTaskCount();
+    }
+
+    function updateTaskCount() {
+      const completed = tasks.filter(task => task.done).length;
+      $("#task-count").textContent =
+        `${completed} of ${tasks.length} tasks completed`;
+    }
+
+    $("#task-form").addEventListener("submit", event => {
+      event.preventDefault();
+      const text = $("#task-input").value.trim();
+      if (!text) return;
+
+      tasks.push({ text, done: false });
+      save();
+      renderTasks();
+      $("#task-input").value = "";
+      $("#task-input").focus();
+    });
+
+    let mode = "focus";
+    let duration = 25 * 60;
+    let remaining = duration;
+    let deadline = 0;
+    let interval = null;
+    let running = false;
+
+    function drawTimer() {
+      const minutes = Math.floor(remaining / 60);
+      const seconds = remaining % 60;
+
+      $("#clock").textContent =
+        `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+
+      $("#progress").max = duration;
+      $("#progress").value = duration - remaining;
+      document.title = `${$("#clock").textContent} · Orbit Focus`;
+    }
+
+    function stopTimer() {
+      clearInterval(interval);
+      interval = null;
+      running = false;
+      $("#universe").classList.remove("running");
+    }
+
+    function tick() {
+      remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+      drawTimer();
+
+      if (remaining === 0) {
+        stopTimer();
+
+        if (mode === "focus") {
+          sessions++;
+          $("#sessions").textContent = sessions;
+          save();
+        }
+
+        $("#phase").textContent = "Orbit complete";
+        $("#start").textContent = "Start again";
+        $("#message").textContent = mode === "focus"
+          ? "Mission complete! Take a breath and enjoy a short break. ✦"
+          : "Rest complete. Ready for your next mission?";
+      }
+    }
+
+    $("#start").addEventListener("click", () => {
+      if (running) {
+        tick();
+        if (!running) return;
+
+        stopTimer();
+        $("#phase").textContent = "Orbit paused";
+        $("#start").textContent = "Resume";
+        return;
+      }
+
+      if (remaining === 0) remaining = duration;
+
+      deadline = Date.now() + remaining * 1000;
+      running = true;
+      $("#message").textContent = "";
+      $("#phase").textContent = mode === "focus"
+        ? "One thing at a time"
+        : "Breathe. Stretch. Recharge.";
+      $("#start").textContent = "Pause";
+      $("#universe").classList.add("running");
+
+      drawTimer();
+      interval = setInterval(tick, 250);
+    });
+
+    function resetTimer() {
+      stopTimer();
+      remaining = duration;
+      $("#start").textContent = mode === "focus" ? "Start mission" : "Start rest";
+      $("#phase").textContent = "Ready for takeoff";
+      $("#message").textContent = "";
+      drawTimer();
+    }
+
+    $("#reset").addEventListener("click", resetTimer);
+
+    document.querySelectorAll("[data-mode]").forEach(button => {
+      button.addEventListener("click", () => {
+        mode = button.dataset.mode;
+        duration = mode === "focus" ? 25 * 60 : 5 * 60;
+
+        document.querySelectorAll("[data-mode]").forEach(item => {
+          item.setAttribute("aria-pressed", String(item === button));
+        });
+
+        resetTimer();
+      });
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden && running) tick();
+    });
+
+    $("#sessions").textContent = sessions;
+    renderTasks();
+    drawTimer();
+  </script>
+</body>
+</html>
